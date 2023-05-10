@@ -51,8 +51,8 @@ class KafkaStreamsTestApplicationTests {
 
     @Test
     void test_send_receive() throws InterruptedException {
-        publish10MessagesToTopic(TEST_TOPIC_1, 0);
-        publish10MessagesToTopic(TEST_TOPIC_2, 10);
+        publish10MessagesToTopic(TEST_TOPIC_1, 0, 0);
+        publish10MessagesToTopic(TEST_TOPIC_2, 10, 100);
 //        startSimpleConsumer();
         startKafkaStreamsConsumer();
     }
@@ -91,11 +91,16 @@ class KafkaStreamsTestApplicationTests {
     }
 
 
-    private void publish10MessagesToTopic(String topic, int init) {
+    private void publish10MessagesToTopic(String topic, int init, long timestamp0) {
         Producer<String, String> producer = new KafkaProducer<>(Map.of(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBrokers(), ProducerConfig.CLIENT_ID_CONFIG, "integration_test_producer", ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName(), ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName()));
 
-        for (int i = init; i < init + 10; i++)
-            producer.send(new ProducerRecord<>(topic, Integer.toString(i), Integer.toString(i)));
+        for (int i = init; i < init + 10; i++) {
+
+            ProducerRecord<String, String> record =
+                    new ProducerRecord<>(topic, null, timestamp0+i, Integer.toString(i), Integer.toString(i));
+            producer.send(record);
+        }
+
         System.out.println("Message sent successfully");
         producer.close();
     }
